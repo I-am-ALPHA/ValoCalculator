@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valorant Total Spent Calculator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Valorant Total Spent Calculator</h1>
+    <p>Select the skins you own and number of battle passes to estimate your spending.</p>
+
+    <div id="weapon-list"></div>
+
+    <div class="battle-pass">
+      <label for="battlePasses">Battle Passes Owned (1000 VP each): </label>
+      <input type="number" id="battlePasses" value="0" min="0">
+    </div>
+
+    <button id="calculateBtn">Calculate Total</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
