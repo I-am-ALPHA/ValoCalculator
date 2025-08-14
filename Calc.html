@@ -1,192 +1,84 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <title>Valorant Total Spent Calculator</title>
-<script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body{font-family:system-ui;background:#0b1826;color:#e6eef9;}
-  .glass{background:rgba(16,22,33,.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.08)}
-  .pill{border:1px solid rgba(255,255,255,.1)}.input{background:#0c1320;border:1px solid rgba(255,255,255,.08)}
-  .mono{font-variant-numeric:tabular-nums;font-family:monospace;}
+  body { font-family: Arial, sans-serif; padding: 20px; background: #0f1923; color: #fff; }
+  h1, h2 { color: #ff4655; }
+  .weapon { margin-bottom: 10px; }
+  label { margin-right: 10px; }
+  button { padding: 10px 20px; background: #ff4655; border: none; color: #fff; cursor: pointer; }
 </style>
-</head><body class="p-6">
-<h1 class="text-3xl mb-4">Valorant Total Spent Calculator</h1>
-<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-  <!-- Skins -->
-  <div class="glass p-4 rounded-lg">
-    <h2 class="text-xl mb-3">1) Pick your skins</h2>
-    <label>Search Vandals:</label>
-    <input id="searchV" class="input rounded px-2 py-1 w-full mb-3" placeholder="e.g. Reaver">
-    <div id="vandalList" class="max-h-48 overflow-auto"></div>
-    <div class="mt-4"><label>Search Others:</label>
-    <input id="searchW" class="input rounded px-2 py-1 w-full mb-3" placeholder="e.g. Phantom">
-    <div id="weaponList" class="max-h-48 overflow-auto"></div></div>
-  </div>
+</head>
+<body>
+<h1>Valorant Spending Calculator</h1>
 
-  <!-- Battle Pass & Bundles -->
-  <div class="glass p-4 rounded-lg">
-    <h2 class="text-xl mb-3">2) Battle Passes & VP bundles</h2>
-    <label>BP bought (1,000 VP each):</label>
-    <input id="bpCount" type="number" value="0" class="input rounded px-2 py-1 w-24 mb-3">
-    <details><summary>Edit VP bundles/pricing</summary>
-      <table class="w-full text-sm mt-2"><thead><tr><th>USD</th><th>Base</th><th>Bonus</th><th>Total</th></tr></thead><tbody id="bundleTable"></tbody></table>
-      <button id="resetBundles" class="mt-2 text-xs underline">Reset</button>
-    </details>
-  </div>
+<div id="weapons"></div>
 
-  <!-- Results -->
-  <div class="glass p-4 rounded-lg sticky top-6">
-    <h2 class="text-xl mb-3">3) Calculate</h2>
-    <button id="calcBtn" class="bg-green-500 px-4 py-2 rounded">Calculate</button>
-    <button id="clearBtn" class="ml-2 border px-4 py-2 rounded">Clear</button>
-    <div class="mt-4 space-y-2">
-      <div class="flex justify-between"><span>Vandal skins:</span><span id="countV" class="mono">0</span></div>
-      <div class="flex justify-between"><span>Other skins:</span><span id="countW" class="mono">0</span></div>
-      <div class="flex justify-between"><span>VP from skin:</span><span id="skinsVP" class="mono">0</span></div>
-      <div class="flex justify-between"><span>Battle Pass VP:</span><span id="bpVP" class="mono">0</span></div>
-      <hr class="border-slate-700">
-      <div class="flex justify-between font-semibold"><span>Total VP:</span><span id="totalVP" class="mono">0</span></div>
-      <div class="flex justify-between"><span>Est. USD:</span><span id="estUSD" class="mono">$0.00</span></div>
-    </div>
-  </div>
-</section>
+<h2>Battle Passes</h2>
+<input type="number" id="bpCount" value="0" min="0">
+
+<br><br>
+<button onclick="calculate()">Calculate</button>
+
+<h2>Results</h2>
+<p id="results">Total VP: 0 | Estimated USD: $0.00</p>
 
 <script>
-// Tier → VP
-const TIERS = { Select:875, Deluxe:1275, Premium:1775, Exclusive:2175, Ultra:2475 };
+const tiers = {
+  "Select": 875,
+  "Deluxe": 1275,
+  "Premium": 1775,
+  "Exclusive": 2175,
+  "Ultra": 2475,
+  "Melee": 3550
+};
 
-// All weapons + tiers
-const WEAPONS = ["Classic","Shorty","Frenzy","Ghost","Sheriff","Stinger","Spectre","Bucky","Judge","Bulldog","Guardian","Phantom","Vandal","Marshal","Operator","Ares","Odin","Melee"];
-let ALL_SKINS = [];
-WEAPONS.forEach(w=>{
-  Object.keys(TIERS).forEach(t=>{
-    ALL_SKINS.push({ id:`${w}_${t}`, weapon:w, tier:t, vp:TIERS[t] });
-  });
+const weapons = [
+  "Classic","Shorty","Frenzy","Ghost","Sheriff",
+  "Stinger","Spectre",
+  "Bulldog","Guardian","Phantom","Vandal",
+  "Marshal","Operator",
+  "Bucky","Judge",
+  "Ares","Odin",
+  "Knife"
+];
+
+// Generate UI
+const weaponsDiv = document.getElementById('weapons');
+weapons.forEach(weapon => {
+  const div = document.createElement('div');
+  div.className = 'weapon';
+  div.innerHTML = `<h3>${weapon}</h3>`;
+  for (const [tierName, price] of Object.entries(tiers)) {
+    if (weapon !== "Knife" || tierName === "Melee") {
+      if (weapon === "Knife" && tierName !== "Melee") continue;
+      const id = `${weapon}_${tierName}`;
+      div.innerHTML += `
+        <label>
+          <input type="checkbox" id="${id}" data-price="${price}"> ${tierName} (${price} VP)
+        </label>
+      `;
+    }
+  }
+  weaponsDiv.appendChild(div);
 });
 
-// Bundles data
-const DEFAULT = [
-  {usd:4.99,base:475,bonus:0},{usd:9.99,base:1000,bonus:0},
-  {usd:19.99,base:2050,bonus:50},{usd:34.99,base:3650,bonus:200},
-  {usd:49.99,base:5350,bonus:450},{usd:69.99,base:7200,bonus:800},
-  {usd:99.99,base:9500,bonus:1500}];
-let bundles = JSON.parse(JSON.stringify(DEFAULT));
-
-const dom = {
-  vList:document.getElementById("vandalList"),
-  wList:document.getElementById("weaponList"),
-  sV:document.getElementById("searchV"),
-  sW:document.getElementById("searchW"),
-  bpCount:document.getElementById("bpCount"),
-  bundleTable:document.getElementById("bundleTable"),
-  countV:document.getElementById("countV"),
-  countW:document.getElementById("countW"),
-  skinsVP:document.getElementById("skinsVP"),
-  bpVP:document.getElementById("bpVP"),
-  totalVP:document.getElementById("totalVP"),
-  estUSD:document.getElementById("estUSD")
-};
-
-let selected = new Set();
-
-function renderLists(){
-  ["Vandal",""].forEach((mode,i)=>{
-    const listEl=i?dom.wList:dom.vList;
-    const q=(i?dom.sW:dom.sV).value.toLowerCase();
-    listEl.innerHTML="";
-    ALL_SKINS.filter(s=>s.weapon==(i? "Vandal"?false:s.weapon:s.weapon=="Vandal")===!i && s.weapon.toLowerCase().includes(q))
-      .forEach(skin=>{
-      const cb=`
-      <label class="flex justify-between p-1">
-        <div><input type="checkbox" id="${skin.id}" data-id="${skin.id}" ${selected.has(skin.id)?"checked":""}>
-          ${skin.weapon} – ${skin.tier}
-        </div>
-        <div class="mono">${skin.vp}</div>
-      </label>`;
-      listEl.insertAdjacentHTML("beforeend",cb);
-    });
-    listEl.querySelectorAll("input").forEach(cb=>{
-      cb.onchange=e=>{
-        e.target.checked?selected.add(e.target.dataset.id):selected.delete(e.target.dataset.id);
-        updateCounts();
-      }
-    });
+function calculate(){
+  let totalVP = 0;
+  document.querySelectorAll('#weapons input[type=checkbox]').forEach(cb => {
+    if (cb.checked) totalVP += parseInt(cb.dataset.price);
   });
+
+  const bpCount = parseInt(document.getElementById('bpCount').value) || 0;
+  totalVP += bpCount * 1000; // Each BP costs ~1000 VP
+
+  // Estimate USD using base $4.99 per 475 VP bundle (not perfect but close)
+  const usd = (totalVP / 475) * 4.99;
+  document.getElementById('results').textContent =
+    `Total VP: ${totalVP} | Estimated USD: $${usd.toFixed(2)}`;
 }
-
-function renderBundles(){
-  dom.bundleTable.innerHTML="";
-  bundles.forEach((b,i)=>{
-    const row=`<tr>
-      <td><input value="${b.usd}" data-i="${i}" data-k="usd" class="input w-20"></td>
-      <td><input value="${b.base}" data-i="${i}" data-k="base" class="input w-20"></td>
-      <td><input value="${b.bonus}" data-i="${i}" data-k="bonus" class="input w-20"></td>
-      <td class="mono">${b.base+b.bonus}</td></tr>`;
-    dom.bundleTable.insertAdjacentHTML("beforeend",row);
-  });
-  dom.bundleTable.querySelectorAll("input").forEach(inp=>{
-    inp.oninput=e=>{
-      const b=bundles[+e.target.dataset.i];
-      b[e.target.dataset.k]=parseFloat(e.target.value)||0;
-      b.total=b.base+b.bonus;
-      renderBundles();
-    };
-  });
-}
-
-function updateCounts(){
-  const sel = Array.from(selected).map(id=>ALL_SKINS.find(s=>s.id===id));
-  const countV=sel.filter(s=>s.weapon=="Vandal").length;
-  const countW=sel.length-countV;
-  const skinsVP=sel.reduce((a,s)=>a+s.vp,0);
-  const bp=parseInt(dom.bpCount.value)||0;
-  const bpVP=bp*1000;
-  const total=skinsVP+bpVP;
-  dom.countV.textContent=countV;
-  dom.countW.textContent=countW;
-  dom.skinsVP.textContent=skinsVP;
-  dom.bpVP.textContent=bpVP;
-  dom.totalVP.textContent=total;
-}
-
-function estimateUSD(target){
-  if(target<=0)return 0;
-  const maxVP=Math.max(...bundles.map(b=>b.base+b.bonus));
-  const cap=target+maxVP;
-  const dp=Array(cap+1).fill(Infinity);
-  dp[0]=0;
-  bundles.forEach(b=>b.total=b.base+b.bonus);
-  for(let v=1;v<=cap;v++){
-    bundles.forEach(b=>{
-      if(v-b.total>=0)dp[v]=Math.min(dp[v],dp[v-b.total]+b.usd);
-    });
-  }
-  let ans=Infinity;
-  for(let v=target;v<=cap;v++)ans=Math.min(ans,dp[v]);
-  return ans;
-}
-
-// Events
-dom.sV.oninput=renderLists;
-dom.sW.oninput=renderLists;
-dom.bpCount.oninput=updateCounts;
-document.getElementById("resetBundles").onclick=()=>{
-  bundles=JSON.parse(JSON.stringify(DEFAULT));
-  renderBundles();
-};
-document.getElementById("calcBtn").onclick=()=>{
-  updateCounts();
-  const total=parseInt(dom.totalVP.textContent);
-  dom.estUSD.textContent=`$${estimateUSD(total).toFixed(2)}`;
-};
-document.getElementById("clearBtn").onclick=()=>{
-  selected.clear();
-  dom.sV.value=dom.sW.value="";
-  dom.bpCount.value=0;
-  renderLists();updateCounts();
-  dom.estUSD.textContent="$0.00";
-};
-
-// Init
-renderLists();renderBundles();updateCounts();
 </script>
-</body></html>
+</body>
+</html>
