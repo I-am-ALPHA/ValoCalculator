@@ -1,26 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Valorant Total Spent Calculator</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Valorant VP Spent Calculator</title>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
   <div class="container">
-    <h1>Valorant Total Spent Calculator</h1>
-    <p>Select the skins you own and number of battle passes to estimate your spending.</p>
+    <h1>Valorant Total VP Spent Calculator</h1>
 
-    <div id="weapon-list"></div>
+    <section class="skins-section">
+      <h2>Select Skins You Own</h2>
+      <div class="skin-item"><label><input type="checkbox" data-vp="875"> Select (Gun) – 875 VP</label></div>
+      <div class="skin-item"><label><input type="checkbox" data-vp="1750"> Select (Melee) – 1,750 VP</label></div>
+      <div class="skin-item"><label><input type="checkbox" data-vp="1275"> Deluxe (Gun) – 1,275 VP</label></div>
+      <div class="skin-item"><label><input type="checkbox" data-vp="2550"> Deluxe (Melee) – 2,550 VP</label></div>
+      <div class="skin-item"><label><input type="checkbox" data-vp="1775"> Premium (Gun) – 1,775 VP</label></div>
+      <div class="skin-item"><label><input type="checkbox" data-vp="3550"> Premium (Melee) – 3,550 VP</label></div>
+      <div class="skin-item"><label><input type="checkbox" data-vp="2175"> Exclusive (Gun) – 2,175 VP</label></div>
+      <div class="skin-item"><label><input type="checkbox" data-vp="4350"> Exclusive (Melee) – 4,350 VP</label></div>
+      <div class="skin-item"><label><input type="checkbox" data-vp="2475"> Ultra (Gun) – 2,475 VP</label></div>
+      <div class="skin-item"><label><input type="checkbox" data-vp="4950"> Ultra (Melee) – 4,950 VP</label></div>
+    </section>
 
-    <div class="battle-pass">
-      <label for="battlePasses">Battle Passes Owned (1000 VP each): </label>
-      <input type="number" id="battlePasses" value="0" min="0">
+    <section class="bp-section">
+      <h2>Battle Passes Purchased</h2>
+      <label>Count: <input type="number" id="bpCount" min="0" value="0"/></label>
+    </section>
+
+    <button id="calculateBtn">Calculate Total Spent</button>
+
+    <div class="result">
+      <h2>Total VP Spent</h2>
+      <p id="totalVp">0 VP</p>
     </div>
-
-    <button id="calculateBtn">Calculate Total</button>
-
-    <div id="result"></div>
   </div>
 
   <script src="script.js"></script>
